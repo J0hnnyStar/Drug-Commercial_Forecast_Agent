@@ -8,10 +8,16 @@ run-notebooks:	## run core notebooks headless (optional)
 	@echo "Open notebooks/01_*.ipynb in Cursor and run interactively"
 
 app:		## run Streamlit app
-	streamlit run src/app.py
+	python -m streamlit run src/app.py
 
 test:		## run tests
-	pytest -q
+	python -m pytest tests/ -v
+
+validate:	## quick validation of all components
+	@echo "🔍 Validating components..."
+	@python src/models/bass.py > nul && echo "✅ Bass model works"
+	@python src/econ/npv.py > nul && echo "✅ NPV model works"  
+	@echo "🎉 Core models validated!"
 
 clean:		## clean up generated files
 	rmdir /s /q .venv 2>nul || echo "No .venv to clean"

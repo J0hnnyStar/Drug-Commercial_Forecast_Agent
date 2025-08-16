@@ -295,11 +295,14 @@ def monte_carlo_npv(base_params: Dict[str, Any],
         
         # Calculate cashflows for this simulation
         try:
+            # Extract WACC for NPV calculation
+            wacc_annual = params.pop('wacc_annual', 0.10)
+            
             cashflow_result = calculate_cashflows(**params)
             net_cf = cashflow_result['net_cashflows']
             
             # Calculate NPV and IRR
-            npv_sim = npv(net_cf, params.get('wacc_annual', 0.10))
+            npv_sim = npv(net_cf, wacc_annual)
             irr_sim = irr(net_cf)
             
             npv_results.append(npv_sim)
@@ -314,27 +317,51 @@ def monte_carlo_npv(base_params: Dict[str, Any],
     npv_array = np.array(npv_results)
     irr_array = np.array(irr_results)
     
-    results = {
-        'npv': {
-            'values': npv_array,
-            'mean': np.mean(npv_array),
-            'std': np.std(npv_array),
-            'p10': np.percentile(npv_array, 10),
-            'p50': np.percentile(npv_array, 50),
-            'p90': np.percentile(npv_array, 90),
-            'prob_positive': np.mean(npv_array > 0)
-        },
-        'irr': {
-            'values': irr_array,
-            'mean': np.mean(irr_array) if len(irr_array) > 0 else np.nan,
-            'std': np.std(irr_array) if len(irr_array) > 0 else np.nan,
-            'p10': np.percentile(irr_array, 10) if len(irr_array) > 0 else np.nan,
-            'p50': np.percentile(irr_array, 50) if len(irr_array) > 0 else np.nan,
-            'p90': np.percentile(irr_array, 90) if len(irr_array) > 0 else np.nan,
-        },
-        'n_simulations': len(npv_results),
-        'success_rate': len(npv_results) / n_simulations
-    }
+    # Handle empty results case
+    if len(npv_results) == 0:
+        results = {
+            'npv': {
+                'values': npv_array,
+                'mean': np.nan,
+                'std': np.nan,
+                'p10': np.nan,
+                'p50': np.nan,
+                'p90': np.nan,
+                'prob_positive': np.nan
+            },
+            'irr': {
+                'values': irr_array,
+                'mean': np.nan,
+                'std': np.nan,
+                'p10': np.nan,
+                'p50': np.nan,
+                'p90': np.nan,
+            },
+            'n_simulations': 0,
+            'success_rate': 0.0
+        }
+    else:
+        results = {
+            'npv': {
+                'values': npv_array,
+                'mean': np.mean(npv_array),
+                'std': np.std(npv_array),
+                'p10': np.percentile(npv_array, 10),
+                'p50': np.percentile(npv_array, 50),
+                'p90': np.percentile(npv_array, 90),
+                'prob_positive': np.mean(npv_array > 0)
+            },
+            'irr': {
+                'values': irr_array,
+                'mean': np.mean(irr_array) if len(irr_array) > 0 else np.nan,
+                'std': np.std(irr_array) if len(irr_array) > 0 else np.nan,
+                'p10': np.percentile(irr_array, 10) if len(irr_array) > 0 else np.nan,
+                'p50': np.percentile(irr_array, 50) if len(irr_array) > 0 else np.nan,
+                'p90': np.percentile(irr_array, 90) if len(irr_array) > 0 else np.nan,
+            },
+            'n_simulations': len(npv_results),
+            'success_rate': len(npv_results) / n_simulations
+        }
     
     return results
 

@@ -22,19 +22,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import warnings
 
-# Access tier definitions and adoption ceilings
-ACCESS_TIERS = {
-    "OPEN": 1.0,    # 100% of market accessible
-    "PA": 0.6,      # 60% accessible (prior auth barriers)
-    "NICHE": 0.25   # 25% accessible (highly restricted)
-}
+# Import constants instead of hardcoding
+try:
+    from constants import (
+        PRICE_THRESHOLDS, GTN_BY_TIER, ADOPTION_CEILING_BY_TIER
+    )
+except ImportError:
+    # Fallback for backwards compatibility
+    PRICE_THRESHOLDS = {'OPEN': 1000, 'PA': 2500, 'NICHE': float('inf')}
+    GTN_BY_TIER = {'OPEN': 0.75, 'PA': 0.65, 'NICHE': 0.55}
+    ADOPTION_CEILING_BY_TIER = {'OPEN': 1.0, 'PA': 0.6, 'NICHE': 0.25}
 
-# Gross-to-Net percentages by tier
-GTN_BY_TIER = {
-    "OPEN": 0.75,   # Lower rebates/discounts
-    "PA": 0.65,     # Moderate rebates
-    "NICHE": 0.55   # Higher rebates for access
-}
+# Keep old name for backwards compatibility
+ACCESS_TIERS = ADOPTION_CEILING_BY_TIER
 
 def tier_from_price(list_price_month: float, 
                    thresholds: Optional[Dict[str, float]] = None) -> str:
@@ -57,17 +57,21 @@ def tier_from_price(list_price_month: float,
         'NICHE'
     """
     if thresholds is None:
-        thresholds = {
-            'open_max': 1000,
-            'pa_max': 2500
-        }
-    
-    if list_price_month < thresholds['open_max']:
-        return "OPEN"
-    elif list_price_month < thresholds['pa_max']:
-        return "PA"
+        # Use constants instead of hardcoded values
+        if list_price_month < PRICE_THRESHOLDS['OPEN']:
+            return "OPEN"
+        elif list_price_month < PRICE_THRESHOLDS['PA']:
+            return "PA"
+        else:
+            return "NICHE"
     else:
-        return "NICHE"
+        # Custom thresholds provided
+        if list_price_month < thresholds['open_max']:
+            return "OPEN"
+        elif list_price_month < thresholds['pa_max']:
+            return "PA"
+        else:
+            return "NICHE"
 
 def gtn_from_tier(access_tier: str, 
                  custom_gtn: Optional[Dict[str, float]] = None) -> float:

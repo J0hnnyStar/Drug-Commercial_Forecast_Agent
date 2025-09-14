@@ -1,179 +1,100 @@
-# AI-Powered Commercial-Forecast Agent
+# Drug-Commercial Forecast Agent (Phase 0)
 
-**Academic-First → Enterprise-Ready**
+Production-grade foundation for pharmaceutical commercial forecasting with industry baselines, rigorous statistics, full audit logging, and acceptance gates. Phase 0 validates infrastructure on synthetic data only; Phase 1 will add real launches (N≥50) and backtesting.
 
 ## Table of Contents
+- [Overview](#overview)
+- [Repo Map](#repo-map)
+- [Setup](#setup)
+- [Core Commands](#core-commands)
+- [Acceptance Gates (G1–G5)](#acceptance-gates-g1–g5)
 
-- [AI-Powered Commercial-Forecast Agent](#ai-powered-commercial-forecast-agent)
-  - [Table of Contents](#table-of-contents)
-  - [Purpose (what this project is)](#purpose-what-this-project-is)
-  - [Why it matters](#why-it-matters)
-  - [Primary Users \& Decisions](#primary-users--decisions)
-  - [Scope \& Non-Goals (for this MVP)](#scope--non-goals-for-this-mvp)
-    - [In-scope](#in-scope)
-    - [Non-goals (MVP)](#non-goals-mvp)
-  - [Success Criteria (2-Week MVP)](#success-criteria-2-week-mvp)
-  - [Architectural Overview (MVP)](#architectural-overview-mvp)
-  - [Data \& Assumptions (MVP)](#data--assumptions-mvp)
-  - [Deliverables](#deliverables)
-  - [Constraints \& Guardrails](#constraints--guardrails)
-  - [Expansion Path (post-MVP)](#expansion-path-post-mvp)
-  - [Glossary (for consistency)](#glossary-for-consistency)
-  - [File Ownership (where Claude should write code)](#file-ownership-where-claude-should-write-code)
-  - [Acceptance Tests (must pass)](#acceptance-tests-must-pass)
-  - [Work Order Template (Claude should use this format)](#work-order-template-claude-should-use-this-format)
+## Overview
+Phase 0 delivers:
+- Industry baselines: peak sales heuristic, analog projection, patient-flow
+- Statistical protocol: temporal split, 5-fold CV on train, Holm–Bonferroni, bootstrap CIs
+- Audit & provenance logging: usage, cost, git state, seeds, configs
+- Acceptance gates (G1–G5) to prevent over-claims
+- CLI and Make targets for reproducible runs
 
-## Purpose (what this project is)
+No performance claims on real launches are made in Phase 0. Phase 1 collects real data and runs backtesting plus H1/H2/H3 evaluations.
 
-An end-to-end agent that turns minimal, auditable inputs into **board-ready commercial forecasts** for pipeline drugs. It produces:
+## Repo Map
+- Key modules:
+  - `src/data/build_dataset.py`, `src/models/{baselines,analogs,patient_flow}.py`, `src/stats/protocol.py`, `src/utils/audit.py`, `src/cli.py`
+  - `evaluation/run_h1.py`, `evaluation/backtesting.py`
+  - `reports/complete_conference_paper.tex`, `reports/overleaf/*.md`
+  - `AGENTS.md`, `docs/SPEC.md`, `ai_scientist/artifacts/*.json`
 
-- A **TAM/SAM-based adoption forecast** (Bass diffusion + ML overlay)
-- A **price/access simulator** that maps price bands to expected coverage (open/PA/niche) and net revenue (GtN)
-- A **Monte-Carlo NPV/IRR** engine with explainable drivers (SHAP)
-- A **one-pager export** (charts + assumptions) suitable for senior stakeholders
+## Setup
+```bash
+python -m venv .venv
+. .venv/Scripts/activate  # PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+make supplemental
+```
 
-> **Reference asset:** Verona Pharma's ensifentrine (COPD) as a blueprint for design choices (but MVP uses public/synthetic data only).
+## Core Commands
+```bash
+python src/cli.py build-data --seed 42
+python src/cli.py test-baselines -v
+python src/cli.py forecast --method ensemble --years 5
+python src/cli.py check_protocol --verbose
+python src/cli.py evaluate --seed 42
+python src/cli.py gates
+python src/cli.py audit
+```
 
-## Why it matters
+## Acceptance Gates (G1–G5)
+- **G1 Data**: N≥50 launches, ≥5 therapeutic areas, 5-year revenues; schema-valid parquet; profile published
+- **G2 Baselines**: peak heuristic, analogs, patient-flow implemented; tests pass
+- **G3 Statistical Rigor**: temporal split, 5-fold CV (train only), Holm–Bonferroni corrections, bootstrap CIs
+- **G4 Results**: On held-out test, ensemble beats best single baseline on ≥60% launches; median Y2 APE ≤30%; PI80 in 70–90%
+- **G5 Audit**: usage and provenance artifacts present; clean git state
 
-Academic teams need credible commercial read-through **before** paying for large datasets or partner engagements. This agent proves value on public/synthetic data, then **scales cleanly** to enterprise datasets (claims, Rx audits, payer policy feeds) without changing core APIs or file schemas.
+## Data & Schemas
+Phase 0 uses a synthetic generator to validate the pipeline. Phase 1 introduces real launches.
 
----
+- `data_proc/launches.parquet` (one row per launch):
+  - `launch_id`, `drug_name`, `company`, `approval_date`, `indication`, `mechanism`, `route`, `therapeutic_area`
+  - `eligible_patients_at_launch`, `market_size_source`, `list_price_month_usd_launch`, `net_gtn_pct_launch`
+  - `access_tier_at_launch` (OPEN|PA|NICHE), `price_source`, `competitor_count_at_launch`
+  - `clinical_efficacy_proxy` (0–1), `safety_black_box` (bool), `source_urls` (json)
+- `data_proc/launch_revenues.parquet` (one row per launch-year):
+  - `launch_id`, `year_since_launch` (0..4), `revenue_usd`, `source_url`
+- `data_proc/analogs.parquet` (optional):
+  - `launch_id`, `analog_launch_id`, `similarity_score` (0–1), `justification`
 
-## Primary Users & Decisions
+## Evaluation & Backtesting
+- H1 (Evidence Grounding): `evaluation/run_h1.py` compares heuristic vs analog vs ensemble (with intervals). Real “grounding” requires external sources (Phase 1).
+- Backtesting: `evaluation/backtesting.py` runs rolling quarterly windows; aggregates Y2 APE, peak APE, trajectory MAPE; writes `results/backtest_results.json` and checks G4.
 
-- **PI / Board / Commercial Lead** — "What is a credible price/access strategy and the NPV range under uncertainty?"
-- **HEOR / Market Access** — "Which price corridor maximizes value under realistic payer behavior?"
-- **Portfolio/BD** — "What's the upside/risk for partner vs. go-it-alone vs. exit?"
+## Audit & Reproducibility
+- `results/usage_log.jsonl` — API usage (provider, model, tokens, cost, prompt/response hashes)
+- `results/run_provenance.json` — git commit, branch, dirty flag; seed, config snapshot; runs summary
+- All CLIs accept `--seed` where applicable for deterministic behavior
 
----
+## Writing & Paper
+- `reports/complete_conference_paper.tex` — aligned to Phase 0 (no over-claims)
+- Agent-updated sections: `reports/overleaf/INTRODUCTION.md`, `METHODS.md`, `RESULTS.md`
 
-## Scope & Non-Goals (for this MVP)
+## Prompts & Agents Policy
+- `AGENTS.md` — roles, gates (G1–G5), execution protocol
+- `docs/SPEC.md` — single source of truth for reusable prompt templates
+- Policy: Agents MUST use SPEC templates; propose changes by versioning SPEC, not ad-hoc prompts
 
-### In-scope
+## Contributing
+- Open PRs to `pi-review` branch; CI will check gates artifacts
+- Commit configs, code, prompts, specs, small protocol JSONs; avoid secrets/large raw dumps
+- Code style: clear names, small functions, behavior-focused tests
 
-- US market only (initially)
-- COPD asset benchmark (ensifentrine) + 1 analog back-test
-- Clean, deterministic pipeline: `data → forecast → NPV → one-pager`
+## Troubleshooting
+- Dataset missing: run `python src/cli.py build-data --seed 42`
+- Baseline tests failing: `python -m pytest tests/test_baselines.py -v`
+- Audit shows git dirty: commit or stash changes before runs for G5
+- Windows paths: use PowerShell activation `.venv\Scripts\Activate.ps1`
 
-### Non-goals (MVP)
-
-- No PHI or real EHR ingestion
-- No multi-country hierarchy (Bayesian multi-market comes later)
-- No production Spark/Snowflake deployment (local Streamlit + notebooks only)
-
----
-
-## Success Criteria (2-Week MVP)
-
-- Runs end-to-end locally; small, documented synthetic/public CSVs
-- **Adoption forecast + NPV P10/P50/P90** generated
-- **Price/access toggles** change adoption & net revenue as expected
-- **Explainability:** SHAP plots identify top drivers
-- **Exportable one-pager** with charts + assumptions box
-- **Back-test seed:** 1 analog launch → report Year-1 MAPE
-
----
-
-## Architectural Overview (MVP)
-
-1. **Data layer** (`data_raw/` → `data_proc/`): tiny CSVs for epi, analogs, price bands, and payer snippets; loader validates schemas.
-
-2. **Forecast core**:
-   - **Bass diffusion** → quarterly adopters
-   - **GBDT overlay** (thin) → adjusts adoption with a few features (e.g., price_index, access_tier_idx)
-
-3. **Price/Access simulator**: rule-based mapping + (optionally) a tiny classifier; sets adoption ceiling and GtN%.
-
-4. **Economics**: vectorized NPV/IRR with quarterly discounting; **Monte-Carlo** ≥10k runs over key uncertainties.
-
-5. **Explainability**: SHAP (global + local) → driver bar & waterfall PNGs.
-
-6. **UI & Export**: Streamlit sliders + **pptx** export (Jinja2 template) → "board-ready" one-pager.
-
----
-
-## Data & Assumptions (MVP)
-
-- **Epi:** US COPD prevalence, exacerbation rate, and **eligible-for-nebulizer** estimate (public/synthetic).
-- **Analogs:** 2–3 respiratory launches with rough p/q priors and price bands.
-- **Price bands → Access tier** mapping (OPEN / PA / NICHE) with hard thresholds (doc in code comments).
-- **Economics:** list price, GtN%, COGS%, SG&A ramp, WACC (config in `conf/params.yml`).
-- Everything is **documented inline** in notebooks; synthetic data files are prefixed with dates.
-
----
-
-## Deliverables
-
-- `02_forecast_baseline.ipynb` → adoption + revenue curves
-- `03_scenarios_NPV.ipynb` → NPV distribution + driver ranking
-- `src/app.py` → Streamlit demo with sliders & **Export one-pager** button
-- `reports/board_onepager_v0.1.pptx` → charts + assumptions box
-- `reports/tech_notes_v0.2.md` → provenance, model cards, scale path
-
----
-
-## Constraints & Guardrails
-
-- **Academic-first**: small footprint, pure Python; no paid data required to run MVP.
-- **Enterprise-ready**: model APIs stable; later swap in licensed claims/Rx without changing function signatures.
-- **No PHI**; only public/synthetic data; keep docstrings and unit tests.
-- **Determinism**: set random seeds; ensure figures match between runs given the same config.
-
----
-
-## Expansion Path (post-MVP)
-
-- Multi-market **Bayesian hierarchical** adoption models
-- Payer-policy **LLM parser** for PDFs → JSON, trained classifier for access probability
-- **Databricks/Snowflake** deployment; monthly re-forecast jobs; governance reviews
-- Larger **analog library** and better instrumented back-testing harness
-
----
-
-## Glossary (for consistency)
-
-- **TAM/SAM** — Total/Serviceable Addressable Market (eligible patients after inclusion/exclusion rules)
-- **Bass p/q** — innovation/imitation coefficients governing adoption
-- **GtN%** — Gross-to-Net discount factor (net = list × GtN)
-- **Access tier** — OPEN (broad), PA (prior-auth/restricted), NICHE (highly restricted)
-- **NPV/IRR** — Discounted cash flow metrics over 10-year horizon (quarterly periods)
-
----
-
-## File Ownership (where Claude should write code)
-
-- `src/models/bass.py` — Bass functions only (no I/O)
-- `src/models/gbdt.py` — Thin ML overlay + SHAP hooks
-- `src/access/pricing_sim.py` — Price→access mapping + optional tiny classifier
-- `src/econ/npv.py` — Discounting, NPV/IRR, Monte-Carlo
-- `src/io/etl.py` — CSV loaders + schema validation
-- `src/explain/xai.py` — SHAP plots
-- `src/export/onepager.py` — PPT export via Jinja2 & python-pptx
-- `src/app.py` — Streamlit UI (sliders, charts, export)
-
----
-
-## Acceptance Tests (must pass)
-
-- **Bass**: cumulative adoption ≤ market size; monotonic cumulative; edge cases (tiny m, extreme p/q)
-- **NPV**: r=0 matches sum of cashflows; constant cashflows match closed-form; quarterly vs annual discount switch
-- **Access mapping**: threshold behavior; adoption ceiling applied; GtN updated when tier changes
-- **Export**: renders PPTX with non-blank charts & assumptions box
-
----
-
-## Work Order Template (Claude should use this format)
-
-**Intent**: Implement `<module>` per README
-
-**Plan**:
-
-1. Create/modify files: `<paths>`
-2. Add tests: `<tests>`
-3. Run locally: commands + expected console output
-
-**Diffs**: show code changes only in the specified files
-
-**Notes**: assumptions, seeds, expected shapes/units
+## Roadmap
+- Phase 1: collect real launches (N≥50, ≥5 TAs); run backtesting; execute H1/H2/H3; update paper Results
+- Phase 2: integrate real evidence-grounding sources; fix analog weighting alignment; deploy evaluation CI gates in AI.MED org
 

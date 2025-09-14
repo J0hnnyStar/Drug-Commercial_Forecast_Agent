@@ -1,0 +1,7 @@
+{
+  "h3_pi_coverage": "D:\\AI Drug Commercial Agent\\Drug-Commercial_Forecast_Agent\\reports\\figs\\h3_pi_coverage.png",
+  "npv_histogram": "D:\\AI Drug Commercial Agent\\Drug-Commercial_Forecast_Agent\\reports\\figs\\npv_histogram.png",
+  "shap_npv_drivers": "D:\\AI Drug Commercial Agent\\Drug-Commercial_Forecast_Agent\\reports\\figs\\shap_npv_drivers.png",
+  "seed": 42,
+  "description": "Conference paper figures with fixed seed for reproducibility"
+}

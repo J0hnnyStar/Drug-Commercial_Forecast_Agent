@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 import sys
 from typing import Dict, Any
+from datetime import datetime
 
 # Add src to path for imports  
 src_path = str(Path(__file__).parent)
@@ -25,6 +26,8 @@ try:
         create_adoption_charts, create_revenue_chart, create_npv_histogram,
         display_key_metrics, display_financial_metrics, display_monte_carlo_results
     )
+    from ui.ai_panel import render_ai_demo_panel
+    from export.pptx_generator import create_commercial_forecast_slide, PPTX_AVAILABLE
     
 except ImportError as e:
     st.error(f"Import error: {e}")
@@ -75,6 +78,23 @@ def main() -> None:
     **AI-powered commercial forecasting for pharmaceutical products**  
     Interactive demo using Bass diffusion model + NPV analysis with Monte Carlo uncertainty.
     """)
+    
+    # Add AI Agent Interface
+    st.markdown("---")
+    st.markdown("## 🤖 AI Agent Interface")
+    st.markdown("*Ask natural language questions and watch the AI reason through the analysis*")
+    
+    # Add AI panel in an expander
+    with st.expander("🚀 **Try the AI Agent!** - Natural language pharmaceutical analysis", expanded=False):
+        try:
+            render_ai_demo_panel()
+        except Exception as e:
+            st.error(f"AI Agent currently unavailable: {e}")
+            st.info("Continuing with parameter-based interface below...")
+    
+    st.markdown("---")
+    st.markdown("## 📊 Manual Parameter Interface")
+    st.markdown("*Traditional parameter-based analysis:*")
     
     # Load configuration and render controls
     config = load_default_config()
@@ -184,13 +204,59 @@ def main() -> None:
     
     # Export section
     st.header("📤 Export Results")
-    col_export1, col_export2 = st.columns(2)
+    col_export1, col_export2, col_export3 = st.columns(3)
     
     with col_export1:
         if st.button("📊 Export Charts", type="secondary"):
             st.info("Chart export functionality coming soon!")
     
     with col_export2:
+        if PPTX_AVAILABLE and st.button("🎯 Generate PowerPoint", type="secondary"):
+            try:
+                # Prepare analysis results for PPTX
+                analysis_result = {
+                    "query": f"Analyze {params.get('product_name', 'pharmaceutical product')} at ${params['list_price']}/month",
+                    "recommendation": {
+                        "decision": "GO" if npv_value > 0 else "NO GO",
+                        "rationale": f"NPV of ${npv_value/1e9:.1f}B with {penetration_rate:.0%} market penetration",
+                        "confidence": "High" if npv_value > 1e9 else "Medium"
+                    },
+                    "parameters": {
+                        "list_price_monthly": params['list_price'],
+                        "market_size": params['market_size'],
+                        "bass_p": params['bass_p'],
+                        "bass_q": params['bass_q'],
+                        "wacc": params['wacc']
+                    },
+                    "characteristics": {
+                        "access_tier": access_tier,
+                        "peak_quarter": peak_quarter,
+                        "total_adoption": total_adoption,
+                        "peak_revenue": cashflows['revenue'].max() / 1e6,
+                        "npv_billions": npv_value / 1e9
+                    },
+                    "npv_billions": npv_value / 1e9,
+                    "peak_adoption_quarter": peak_quarter
+                }
+                
+                # Generate PPTX
+                pptx_buffer = create_commercial_forecast_slide(analysis_result)
+                
+                # Download button
+                st.download_button(
+                    label="📥 Download PowerPoint",
+                    data=pptx_buffer.getvalue(),
+                    file_name=f"commercial_forecast_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                )
+                st.success("PowerPoint generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating PowerPoint: {e}")
+        elif not PPTX_AVAILABLE:
+            st.warning("PowerPoint export requires python-pptx. Install with: pip install python-pptx")
+    
+    with col_export3:
         if st.button("📝 Generate Report", type="secondary"):
             st.info("LaTeX report generation coming soon!")
     

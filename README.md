@@ -1,6 +1,6 @@
-# Drug-Commercial Forecast Agent (Phase 0)
+# Drug-Commercial Forecast Agent (Phase 5 - Historical Validation)
 
-Production-grade foundation for pharmaceutical commercial forecasting with industry baselines, rigorous statistics, full audit logging, and acceptance gates. Phase 0 validates infrastructure on synthetic data only; Phase 1 will add real launches (N≥50) and backtesting.
+Production-grade AI-powered pharmaceutical commercial forecasting system with multi-agent architecture, real data validation, and comprehensive audit trails. Currently in Phase 5: validating multi-agent system against historical drug performance and continuously improving forecast accuracy.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -10,21 +10,38 @@ Production-grade foundation for pharmaceutical commercial forecasting with indus
 - [Acceptance Gates (G1–G5)](#acceptance-gates-g1–g5)
 
 ## Overview
-Phase 0 delivers:
-- Industry baselines: peak sales heuristic, analog projection, patient-flow
-- Statistical protocol: temporal split, 5-fold CV on train, Holm–Bonferroni, bootstrap CIs
-- Audit & provenance logging: usage, cost, git state, seeds, configs
-- Acceptance gates (G1–G5) to prevent over-claims
-- CLI and Make targets for reproducible runs
+**Current Status: Phase 2-5 Implementation & Historical Validation**
 
-No performance claims on real launches are made in Phase 0. Phase 1 collects real data and runs backtesting plus H1/H2/H3 evaluations.
+Following the MASSIVE_OVERHAUL_PLAN.md timeline:
+
+**Completed Phases**:
+- ✅ **Phase 0**: Infrastructure foundation - Real datasets, industry baselines, audit logging, CLI
+- ✅ **Phase 1**: Real data collection - SEC filings extraction, drug revenue data pipeline  
+- ✅ **Phase 2**: Multi-agent architecture - GPT-5 orchestrator with 4 specialized agents (DeepSeek, Perplexity, Claude, Gemini)
+
+**In Progress**:
+- 🔄 **Phase 3**: Experimental design - Statistical framework implementation
+- 🔄 **Phase 4**: Implementation pipeline - System monitoring and audit trails
+- 🔄 **Phase 5**: Historical validation - Testing against real drug launches (2015-2020)
+
+**Current Focus**: Historical validation against actual drug performance, calibrating multi-agent system parameters, and achieving target accuracy (±25% MAPE vs ±40% industry consultant baseline)
 
 ## Repo Map
-- Key modules:
-  - `src/data/build_dataset.py`, `src/models/{baselines,analogs,patient_flow}.py`, `src/stats/protocol.py`, `src/utils/audit.py`, `src/cli.py`
-  - `evaluation/run_h1.py`, `evaluation/backtesting.py`
-  - `reports/complete_conference_paper.tex`, `reports/overleaf/*.md`
-  - `AGENTS.md`, `docs/SPEC.md`, `ai_scientist/artifacts/*.json`
+**Core AI System**:
+- `ai_scientist/gpt5_orchestrator.py` - Multi-agent coordinator with 8-step forecasting pipeline
+- `ai_scientist/specialized_agents.py` - DeepSeek, Perplexity, Claude, Gemini agent implementations 
+- `ai_scientist/system_monitor.py` - Full audit trails and decision tracking (Phase 4)
+- `ai_scientist/model_router.py` - LLM provider routing and cost tracking
+
+**Data & Validation**:
+- `src/data/fixed_sec_extractor.py` - Corrected SEC revenue data extraction
+- `phase5_real_validation.py` - Historical validation runner with real drug data
+- `src/models/baselines.py` - Industry baseline methods (peak heuristic, ensemble)
+- `results/phase5_real_validation.json` - Latest validation results
+
+**Evaluation & Monitoring**:
+- `evaluation/{run_h1,run_h2,run_h3}.py` - Hypothesis testing framework
+- `reports/complete_conference_paper.tex` - Updated conference paper with Phase 2-5 results
 
 ## Setup
 ```bash
@@ -35,22 +52,53 @@ make supplemental
 ```
 
 ## Core Commands
+
+**Phase 5 Validation & Testing**:
+```bash
+# Run historical validation with real drug data
+python phase5_real_validation.py
+
+# Test individual components
+python test_calibration.py  # Quick calibration verification
+python test_phase2_multiagent.py  # Multi-agent system testing
+
+# Evaluate hypotheses
+python evaluation/run_h1.py  # Evidence grounding
+python evaluation/run_h2.py  # Temporal stability  
+python evaluation/run_h3.py  # Competitive forecasting
+```
+
+**Legacy CLI (Phase 0-1)**:
 ```bash
 python src/cli.py build-data --seed 42
 python src/cli.py test-baselines -v
 python src/cli.py forecast --method ensemble --years 5
-python src/cli.py check_protocol --verbose
-python src/cli.py evaluate --seed 42
 python src/cli.py gates
 python src/cli.py audit
 ```
 
-## Acceptance Gates (G1–G5)
-- **G1 Data**: N≥50 launches, ≥5 therapeutic areas, 5-year revenues; schema-valid parquet; profile published
-- **G2 Baselines**: peak heuristic, analogs, patient-flow implemented; tests pass
-- **G3 Statistical Rigor**: temporal split, 5-fold CV (train only), Holm–Bonferroni corrections, bootstrap CIs
-- **G4 Results**: On held-out test, ensemble beats best single baseline on ≥60% launches; median Y2 APE ≤30%; PI80 in 70–90%
-- **G5 Audit**: usage and provenance artifacts present; clean git state
+## Validation Status & Acceptance Gates
+
+**Current Performance (Historical Validation)**:
+- Multi-agent system: 81.3% MAPE (targeting ≤25% to beat consultant baseline)
+- Peak heuristic: 67.3% MAPE (best performing baseline)
+- Successfully generating different forecasts per drug (fixed identical prediction issue)
+- Keytruda forecast: $5.2B vs $25B actual (underestimate by 5x)
+- Repatha forecast: $7.0B vs $1.5B actual (overestimate by 4.7x)
+
+**Acceptance Gates Progress (per MASSIVE_OVERHAUL_PLAN.md)**:
+- ✅ **Phase 0 Gates**: Real datasets (N≥50), industry baselines implemented, audit logging
+- ✅ **Phase 1 Gates**: Data collection pipeline operational (SEC, FDA sources)
+- ✅ **Phase 2 Gates**: Multi-agent architecture with GPT-5 orchestrator + 4 specialized agents
+- 🔄 **Phase 3 Gates**: Statistical framework (cross-validation, multiple comparisons)
+- 🔄 **Phase 4 Gates**: System monitoring and reproducibility audit trails
+- 🔄 **Phase 5 Gates**: Beat consultant baseline (±40% → ±25% MAPE target)
+
+**Critical Success Metrics** (per MASSIVE_OVERHAUL_PLAN Phase 7):
+- 🔄 Beat baseline methods on held-out test set
+- 🔄 Achieve ±25% accuracy vs ±40% industry consultant baseline
+- 🔄 Proper statistical validation with real drug launches
+- 🔄 Case studies on blockbusters (Keytruda, Humira) and failures
 
 ## Data & Schemas
 Phase 0 uses a synthetic generator to validate the pipeline. Phase 1 introduces real launches.
@@ -80,7 +128,7 @@ Phase 0 uses a synthetic generator to validate the pipeline. Phase 1 introduces 
 
 ## Prompts & Agents Policy
 - `AGENTS.md` — roles, gates (G1–G5), execution protocol
-- `docs/SPEC.md` — single source of truth for reusable prompt templates
+- `docs/specs/SPEC.md` — single source of truth for reusable prompt templates
 - Policy: Agents MUST use SPEC templates; propose changes by versioning SPEC, not ad-hoc prompts
 
 ## Contributing
@@ -94,7 +142,23 @@ Phase 0 uses a synthetic generator to validate the pipeline. Phase 1 introduces 
 - Audit shows git dirty: commit or stash changes before runs for G5
 - Windows paths: use PowerShell activation `.venv\Scripts\Activate.ps1`
 
-## Roadmap
-- Phase 1: collect real launches (N≥50, ≥5 TAs); run backtesting; execute H1/H2/H3; update paper Results
-- Phase 2: integrate real evidence-grounding sources; fix analog weighting alignment; deploy evaluation CI gates in AI.MED org
+## MASSIVE_OVERHAUL_PLAN Progress
+
+**Timeline (per MASSIVE_OVERHAUL_PLAN.md)**:
+
+**Completed Phases**:
+- ✅ **Phase 0 (Week 0-1)**: Reality check, real datasets, industry baselines, audit hooks, CLI
+- ✅ **Phase 1 (Week 1-2)**: Real-world data collection agent (SEC filings, FDA approvals)  
+- ✅ **Phase 2 (Week 2-3)**: Multi-agent system with GPT-5 orchestrator + specialized agents
+
+**In Progress (Week 3-6)**:
+- 🔄 **Phase 3 (Week 3-4)**: Experimental design - Statistical framework with proper validation
+- 🔄 **Phase 4 (Week 4-5)**: Implementation pipeline - Monitoring, audit trails, reproducibility  
+- 🔄 **Phase 5 (Week 5-6)**: Historical validation - Testing on drugs launched 2015-2020
+
+**Future Phases**:
+- **Phase 6 (Week 6-7)**: Paper rewrite - "Multi-Agent System for Pharmaceutical Commercial Forecasting: Validation on 100 Real Drug Launches"
+- **Phase 7 (Week 7-8)**: Conference submission with real validation results
+
+**Success Target**: "Beat industry consultant baseline (±20% accuracy on real drug launches)" - Currently at 81.3% MAPE, targeting ≤25% MAPE to achieve consultant-level performance
 

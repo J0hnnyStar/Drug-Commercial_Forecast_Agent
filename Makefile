@@ -111,7 +111,7 @@ paper: backtest
 
 docs:
 	@echo "AGENTS.md (system-level prompts)"
-	@echo "docs/SPEC.md (prompt templates)"
+	@echo "docs/specs/SPEC.md (prompt templates)"
 	@echo "reports/overleaf/*.md (agent-updated sections)"
 
 supplemental:

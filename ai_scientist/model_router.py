@@ -271,12 +271,15 @@ class ModelRouter:
             task_type in [TaskType.HYPOTHESIS_GENERATION, TaskType.COMPLEX_REASONING]):
             tools = [{"type": "web_search"}] if hasattr(client, 'web_search') else None
         
+        # GPT-5 only supports temperature=1.0
+        gpt5_temperature = 1.0 if "gpt-5" in model else temperature
+        
         # Prepare API call parameters
         api_params = {
             "model": model,
             "messages": messages,
             "max_completion_tokens": max_tokens or self.config['max_tokens_gpt5'],
-            "temperature": temperature
+            "temperature": gpt5_temperature
         }
         
         # Add structured output format if requested
@@ -317,38 +320,63 @@ class ModelRouter:
                       temperature: float, task_type: TaskType) -> ModelResponse:
         """Call DeepSeek for bulk processing with context caching"""
         
+        print(f"[DEEPSEEK] Starting DeepSeek API call...")
+        print(f"[DEEPSEEK] Task type: {task_type.value}")
+        print(f"[DEEPSEEK] Prompt length: {len(prompt)}")
+        print(f"[DEEPSEEK] System prompt length: {len(system_prompt) if system_prompt else 0}")
+        
         client = self.providers['deepseek']['client']
         model = self.providers['deepseek']['model']
+        
+        print(f"[DEEPSEEK] Using model: {model}")
+        print(f"[DEEPSEEK] Max tokens: {max_tokens or self.config['max_tokens_deepseek']}")
         
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
         
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens or self.config['max_tokens_deepseek'],
-            temperature=temperature
-        )
+        print(f"[DEEPSEEK] Messages prepared: {len(messages)} messages")
+        print(f"[DEEPSEEK] About to call client.chat.completions.create...")
         
-        content = response.choices[0].message.content
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
-        
-        # DeepSeek pricing: $0.56/M input, $1.68/M output (cache miss)
-        cost_cents = (input_tokens * 0.056 + output_tokens * 0.168) / 100
-        
-        self._log_usage('deepseek', model, input_tokens, output_tokens, cost_cents, task_type.value)
-        
-        return ModelResponse(
-            content=content,
-            model_used=model,
-            provider='deepseek',
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            cost_cents=cost_cents
-        )
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens or self.config['max_tokens_deepseek'],
+                temperature=temperature
+            )
+            
+            print(f"[DEEPSEEK] API call successful!")
+            print(f"[DEEPSEEK] Response received, extracting content...")
+            
+            content = response.choices[0].message.content
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
+            
+            print(f"[DEEPSEEK] Content extracted: {len(content)} chars")
+            print(f"[DEEPSEEK] Tokens: {input_tokens} input, {output_tokens} output")
+            
+            # DeepSeek pricing: $0.56/M input, $1.68/M output (cache miss)
+            cost_cents = (input_tokens * 0.056 + output_tokens * 0.168) / 100
+            
+            self._log_usage('deepseek', model, input_tokens, output_tokens, cost_cents, task_type.value)
+            
+            print(f"[DEEPSEEK] Returning ModelResponse...")
+            
+            return ModelResponse(
+                content=content,
+                model_used=model,
+                provider='deepseek',
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_cents=cost_cents
+            )
+            
+        except Exception as e:
+            print(f"[DEEPSEEK] API call failed: {e}")
+            print(f"[DEEPSEEK] Error type: {type(e).__name__}")
+            raise e
     
     def _call_perplexity(self, prompt: str, system_prompt: Optional[str], max_tokens: Optional[int],
                         temperature: float, task_type: TaskType) -> ModelResponse:

@@ -1,0 +1,62 @@
+brand,company,ticker,aliases,therapeutic_area
+Keytruda,Merck,MRK,"Keytruda; pembrolizumab",Oncology
+Humira,AbbVie,ABBV,"Humira; adalimumab",Immunology
+Eliquis,Bristol Myers Squibb,BMY,"Eliquis; apixaban",Cardiovascular
+Repatha,Amgen,AMGN,"Repatha; evolocumab",Cardiovascular
+Entresto,Novartis,NVS,"Entresto; sacubitril; valsartan",Cardiovascular
+Tezspire,AstraZeneca,AZN,"Tezspire; tezepelumab",Respiratory
+Dupixent,Sanofi,SNY,"Dupixent; dupilumab",Immunology
+Opdivo,Bristol Myers Squibb,BMY,"Opdivo; nivolumab",Oncology
+Imbruvica,AbbVie,ABBV,"Imbruvica; ibrutinib",Oncology
+Ibrance,Pfizer,PFE,"Ibrance; palbociclib",Oncology
+Revlimid,Bristol Myers Squibb,BMY,"Revlimid; lenalidomide",Oncology
+Stelara,Johnson & Johnson,JNJ,"Stelara; ustekinumab",Immunology
+Xarelto,Johnson & Johnson,JNJ,"Xarelto; rivaroxaban",Cardiovascular
+Tecfidera,Biogen,BIIB,"Tecfidera; dimethyl fumarate",Neurology
+Ocrevus,Genentech,RHHBY,"Ocrevus; ocrelizumab",Neurology
+Spiriva,Boehringer Ingelheim,BI,"Spiriva; tiotropium",Respiratory
+Symbicort,AstraZeneca,AZN,"Symbicort; budesonide; formoterol",Respiratory
+Jardiance,Boehringer Ingelheim,BI,"Jardiance; empagliflozin",Diabetes
+Trulicity,Eli Lilly,LLY,"Trulicity; dulaglutide",Diabetes
+Victoza,Novo Nordisk,NVO,"Victoza; liraglutide",Diabetes
+Ozempic,Novo Nordisk,NVO,"Ozempic; semaglutide",Diabetes
+Januvia,Merck,MRK,"Januvia; sitagliptin",Diabetes
+Lantus,Sanofi,SNY,"Lantus; insulin glargine",Diabetes
+Avastin,Genentech,RHHBY,"Avastin; bevacizumab",Oncology
+Herceptin,Genentech,RHHBY,"Herceptin; trastuzumab",Oncology
+Rituxan,Genentech,RHHBY,"Rituxan; rituximab",Oncology
+Lucentis,Genentech,RHHBY,"Lucentis; ranibizumab",Ophthalmology
+Eylea,Regeneron,REGN,"Eylea; aflibercept",Ophthalmology
+Restasis,Allergan,AGN,"Restasis; cyclosporine",Ophthalmology
+Lumigan,Allergan,AGN,"Lumigan; bimatoprost",Ophthalmology
+Xalatan,Pfizer,PFE,"Xalatan; latanoprost",Ophthalmology
+Cosentyx,Novartis,NVS,"Cosentyx; secukinumab",Immunology
+Taltz,Eli Lilly,LLY,"Taltz; ixekizumab",Immunology
+Tremfya,Johnson & Johnson,JNJ,"Tremfya; guselkumab",Immunology
+Skyrizi,AbbVie,ABBV,"Skyrizi; risankizumab",Immunology
+Enbrel,Amgen,AMGN,"Enbrel; etanercept",Immunology
+Remicade,Johnson & Johnson,JNJ,"Remicade; infliximab",Immunology
+Cimzia,UCB,UCB,"Cimzia; certolizumab",Immunology
+Simponi,Johnson & Johnson,JNJ,"Simponi; golimumab",Immunology
+Actemra,Genentech,RHHBY,"Actemra; tocilizumab",Immunology
+Kevzara,Sanofi,SNY,"Kevzara; sarilumab",Immunology
+Xeljanz,Pfizer,PFE,"Xeljanz; tofacitinib",Immunology
+Olumiant,Eli Lilly,LLY,"Olumiant; baricitinib",Immunology
+Rinvoq,AbbVie,ABBV,"Rinvoq; upadacitinib",Immunology
+Jakafi,Incyte,INCY,"Jakafi; ruxolitinib",Oncology
+Gleevec,Novartis,NVS,"Gleevec; imatinib",Oncology
+Tasigna,Novartis,NVS,"Tasigna; nilotinib",Oncology
+Sprycel,Bristol Myers Squibb,BMY,"Sprycel; dasatinib",Oncology
+Bosulif,Pfizer,PFE,"Bosulif; bosutinib",Oncology
+Iclusig,Takeda,TAK,"Iclusig; ponatinib",Oncology
+Venclexta,AbbVie,ABBV,"Venclexta; venetoclax",Oncology
+Vidaza,Celgene,BMY,"Vidaza; azacitidine",Oncology
+Dacogen,Otsuka,OTSKY,"Dacogen; decitabine",Oncology
+Mylotarg,Pfizer,PFE,"Mylotarg; gemtuzumab",Oncology
+Besponsa,Pfizer,PFE,"Besponsa; inotuzumab",Oncology
+Blincyto,Amgen,AMGN,"Blincyto; blinatumomab",Oncology
+Kymriah,Novartis,NVS,"Kymriah; tisagenlecleucel",Oncology
+Yescarta,Gilead,GILD,"Yescarta; axicabtagene",Oncology
+Breyanzi,Bristol Myers Squibb,BMY,"Breyanzi; lisocabtagene",Oncology
+Abecma,Bristol Myers Squibb,BMY,"Abecma; idecabtagene",Oncology
+Carvykti,Johnson & Johnson,JNJ,"Carvykti; ciltacabtagene",Oncology

@@ -192,11 +192,12 @@ class PatientFlowModel:
             Dict with patient counts by state over time
         """
         
-        # Initialize patient states
+        # Initialize patient states with proper mass conservation
         states = {
             'eligible': np.zeros(years),
             'on_drug': np.zeros(years),
             'discontinued': np.zeros(years),
+            'competitor_drug': np.zeros(years),  # Track switching to competitors
             'new_patients': np.zeros(years),
             'switching_in': np.zeros(years),
             'switching_out': np.zeros(years)
@@ -254,13 +255,16 @@ class PatientFlowModel:
                     states['new_patients'][t] = 0
                     states['switching_in'][t] = 0
                 
-                # Switching out
+                # Track discontinued from previous year (before switching)
+                discontinued_flow = states['on_drug'][t-1] * params.annual_discontinuation
+                states['discontinued'][t] = states['discontinued'][t-1] + discontinued_flow
+                
+                # Switching out to competitors (separate from discontinuation)
                 states['switching_out'][t] = states['on_drug'][t] * params.switching_out_rate
                 states['on_drug'][t] -= states['switching_out'][t]
                 
-                # Track discontinued
-                states['discontinued'][t] = states['discontinued'][t-1] + \
-                                          states['on_drug'][t-1] * params.annual_discontinuation
+                # Switching out patients go to competitor drugs (mass conservation)
+                states['competitor_drug'][t] = (states['competitor_drug'][t-1] if t > 0 else 0) + states['switching_out'][t]
         
         return states
     

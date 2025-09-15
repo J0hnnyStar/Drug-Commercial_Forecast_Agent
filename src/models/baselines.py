@@ -28,10 +28,45 @@ def peak_sales_heuristic(drug_row: pd.Series) -> float:
         float: Estimated peak sales in USD
     """
     
-    # Extract parameters
-    market_size = drug_row['eligible_patients_at_launch']
-    annual_price = drug_row['list_price_month_usd_launch'] * 12
-    gtn = drug_row['net_gtn_pct_launch']
+    # Extract parameters with sane defaults for missing data
+    market_size = drug_row.get('eligible_patients_at_launch', 0)
+    monthly_price = drug_row.get('list_price_month_usd_launch', 0)
+    gtn = drug_row.get('net_gtn_pct_launch', 0)
+    
+    # Apply intelligent defaults based on therapeutic area if data missing
+    therapeutic_area = drug_row.get('therapeutic_area', 'Unknown')
+    
+    # Default market sizes by therapeutic area (conservative estimates)
+    if market_size <= 0:
+        market_size_defaults = {
+            'Oncology': 500000,      # 500K cancer patients
+            'Immunology': 300000,    # 300K autoimmune patients  
+            'Cardiovascular': 2000000, # 2M CV patients
+            'Respiratory': 1000000,  # 1M respiratory patients
+            'Neurology': 400000,     # 400K neuro patients
+            'Rare Disease': 50000,   # 50K rare disease patients
+            'Diabetes': 1500000      # 1.5M diabetes patients
+        }
+        market_size = market_size_defaults.get(therapeutic_area, 500000)
+    
+    # Default pricing by therapeutic area (monthly USD)
+    if monthly_price <= 0:
+        price_defaults = {
+            'Oncology': 12000,       # $12K/month for cancer drugs
+            'Immunology': 8000,      # $8K/month for autoimmune
+            'Cardiovascular': 400,   # $400/month for CV drugs
+            'Respiratory': 300,      # $300/month for respiratory
+            'Neurology': 6000,       # $6K/month for CNS drugs
+            'Rare Disease': 15000,   # $15K/month for rare disease
+            'Diabetes': 200          # $200/month for diabetes
+        }
+        monthly_price = price_defaults.get(therapeutic_area, 5000)
+    
+    # Default GTN (gross-to-net) if missing
+    if gtn <= 0:
+        gtn = 0.7  # 70% GTN is industry standard
+    
+    annual_price = monthly_price * 12
     
     # Estimate peak share based on competition and access
     peak_share = estimate_peak_share(drug_row)
@@ -261,14 +296,22 @@ def simple_bass_forecast(drug_row: pd.Series, years: int = 5) -> np.ndarray:
     forecast = np.zeros(years)
     cumulative = 0
     
+    # Prevent division by zero
+    total_addressable = market_size * access_mult
+    if total_addressable <= 0:
+        return forecast  # Return zeros if no addressable market
+    
     for t in range(years):
         if t == 0:
             # Launch year
             adopters = market_size * p * access_mult
         else:
             # Bass formula
-            remaining = (market_size * access_mult) - cumulative
-            adopters = remaining * (p + q * cumulative / (market_size * access_mult))
+            remaining = total_addressable - cumulative
+            if remaining <= 0:
+                adopters = 0
+            else:
+                adopters = remaining * (p + q * cumulative / total_addressable)
         
         cumulative += adopters
         revenue = adopters * annual_price * compliance * gtn

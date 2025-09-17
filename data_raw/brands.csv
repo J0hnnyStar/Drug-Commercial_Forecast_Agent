@@ -60,3 +60,63 @@ Yescarta,Gilead,GILD,"Yescarta; axicabtagene",Oncology
 Breyanzi,Bristol Myers Squibb,BMY,"Breyanzi; lisocabtagene",Oncology
 Abecma,Bristol Myers Squibb,BMY,"Abecma; idecabtagene",Oncology
 Carvykti,Johnson & Johnson,JNJ,"Carvykti; ciltacabtagene",Oncology
+Tagrisso,AstraZeneca,AZN,"Tagrisso; osimertinib",Oncology
+Tecentriq,Genentech,RHHBY,"Tecentriq; atezolizumab",Oncology
+Imfinzi,AstraZeneca,AZN,"Imfinzi; durvalumab",Oncology
+Darzalex,Johnson & Johnson,JNJ,"Darzalex; daratumumab",Oncology
+Xtandi,Pfizer,PFE,"Xtandi; enzalutamide",Oncology
+Lynparza,AstraZeneca,AZN,"Lynparza; olaparib",Oncology
+Kisqali,Novartis,NVS,"Kisqali; ribociclib",Oncology
+Perjeta,Genentech,RHHBY,"Perjeta; pertuzumab",Oncology
+Kadcyla,Genentech,RHHBY,"Kadcyla; trastuzumab emtansine",Oncology
+Verzenio,Eli Lilly,LLY,"Verzenio; abemaciclib",Oncology
+Trodelvy,Gilead,GILD,"Trodelvy; sacituzumab govitecan",Oncology
+Enhertu,AstraZeneca,AZN,"Enhertu; trastuzumab deruxtecan",Oncology
+Padcev,Pfizer,PFE,"Padcev; enfortumab vedotin",Oncology
+Zytiga,Johnson & Johnson,JNJ,"Zytiga; abiraterone",Oncology
+Cabometyx,Exelixis,EXEL,"Cabometyx; cabozantinib",Oncology
+Lenvima,Eisai,,"Lenvima; lenvatinib",Oncology
+
+Benlysta,GSK,GSK,"Benlysta; belimumab",Immunology
+Otezla,Amgen,AMGN,"Otezla; apremilast",Immunology
+
+Brilinta,AstraZeneca,AZN,"Brilinta; ticagrelor",Cardiovascular
+Farxiga,AstraZeneca,AZN,"Farxiga; dapagliflozin",Cardiovascular
+Praluent,Regeneron,REGN,"Praluent; alirocumab",Cardiovascular
+Vascepa,Amarin,AMRN,"Vascepa; icosapent ethyl",Cardiovascular
+
+Mounjaro,Eli Lilly,LLY,"Mounjaro; tirzepatide",Diabetes
+Rybelsus,Novo Nordisk,NVO,"Rybelsus; semaglutide",Diabetes
+Tresiba,Novo Nordisk,NVO,"Tresiba; insulin degludec",Diabetes
+Levemir,Novo Nordisk,NVO,"Levemir; insulin detemir",Diabetes
+Toujeo,Sanofi,SNY,"Toujeo; insulin glargine",Diabetes
+Fiasp,Novo Nordisk,NVO,"Fiasp; insulin aspart",Diabetes
+Steglatro,Merck,MRK,"Steglatro; ertugliflozin",Diabetes
+
+Trelegy Ellipta,GSK,GSK,"Trelegy Ellipta; fluticasone; umeclidinium; vilanterol",Respiratory
+Breo Ellipta,GSK,GSK,"Breo Ellipta; fluticasone; vilanterol",Respiratory
+Anoro Ellipta,GSK,GSK,"Anoro Ellipta; umeclidinium; vilanterol",Respiratory
+Nucala,GSK,GSK,"Nucala; mepolizumab",Respiratory
+Fasenra,AstraZeneca,AZN,"Fasenra; benralizumab",Respiratory
+Xolair,Genentech,RHHBY,"Xolair; omalizumab",Respiratory
+Trikafta,Vertex,VRTX,"Trikafta; elexacaftor; tezacaftor; ivacaftor",Respiratory
+
+Aimovig,Amgen,AMGN,"Aimovig; erenumab",Neurology
+Ajovy,Teva,TEVA,"Ajovy; fremanezumab",Neurology
+Emgality,Eli Lilly,LLY,"Emgality; galcanezumab",Neurology
+Botox,AbbVie,ABBV,"Botox; onabotulinumtoxinA",Neurology
+Nurtec ODT,Pfizer,PFE,"Nurtec ODT; rimegepant",Neurology
+Ubrelvy,AbbVie,ABBV,"Ubrelvy; ubrogepant",Neurology
+Kesimpta,Novartis,NVS,"Kesimpta; ofatumumab",Neurology
+Vyepti,Lundbeck,,"Vyepti; eptinezumab",Neurology
+
+Vabysmo,Genentech,RHHBY,"Vabysmo; faricimab",Ophthalmology
+Beovu,Novartis,NVS,"Beovu; brolucizumab",Ophthalmology
+Susvimo,Genentech,RHHBY,"Susvimo; ranibizumab",Ophthalmology
+Xiidra,Bausch + Lomb,BLCO,"Xiidra; lifitegrast",Ophthalmology
+Ozurdex,Allergan,AGN,"Ozurdex; dexamethasone",Ophthalmology
+
+Prolia,Amgen,AMGN,"Prolia; denosumab",Endocrinology
+Evenity,Amgen,AMGN,"Evenity; romosozumab",Endocrinology
+Tymlos,Radius,RDUS,"Tymlos; abaloparatide",Endocrinology
+Forteo,Eli Lilly,LLY,"Forteo; teriparatide",Endocrinology

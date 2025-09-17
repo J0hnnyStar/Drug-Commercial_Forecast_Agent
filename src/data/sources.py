@@ -234,6 +234,7 @@ def extract_revenue_from_xbrl(xbrl_data: Dict[str, Any],
                              brand_aliases: List[str]) -> Dict[str, float]:
     """
     Extract revenue data from XBRL facts, mapped to years since launch.
+    Uses deterministic segment-aware extraction.
     
     Args:
         xbrl_data: Result from fetch_company_xbrl_facts
@@ -243,71 +244,51 @@ def extract_revenue_from_xbrl(xbrl_data: Dict[str, Any],
     Returns:
         Dict mapping year_since_launch to revenue amount
     """
-    revenues = {}
+    from .xbrl_extractor import extract_product_revenues, validate_extraction_quality
     
-    if 'error' in xbrl_data or 'facts' not in xbrl_data:
-        return revenues
+    # Use the enhanced deterministic extractor
+    extraction_result = extract_product_revenues(xbrl_data, approval_year, brand_aliases)
     
-    facts = xbrl_data['facts']
-    if 'us-gaap' not in facts:
-        return revenues
-    
-    gaap = facts['us-gaap']
-    
-    # Common revenue field names in XBRL
-    revenue_fields = [
-        'Revenues',
-        'RevenueFromContractWithCustomerExcludingAssessedTax', 
-        'SalesRevenueNet',
-        'RevenueFromContractWithCustomerIncludingAssessedTax',
-        'ProductSales',
-        'NetSales'
-    ]
-    
-    # Look for revenue fields that exist in this company's data
-    available_revenue_fields = [field for field in revenue_fields if field in gaap]
-    
-    if not available_revenue_fields:
-        # Fallback: find any field with "revenue" in the name
-        available_revenue_fields = [k for k in gaap.keys() if 'revenue' in k.lower() and k in gaap]
-    
-    for field_name in available_revenue_fields:
-        field_data = gaap[field_name]
+    # Handle both old and new formats
+    if isinstance(extraction_result, dict) and '_enhanced_extraction' in extraction_result:
+        # New enhanced format
+        revenues_data = extraction_result['revenues']
+        metadata = extraction_result['metadata']
         
-        if 'units' not in field_data or 'USD' not in field_data['units']:
-            continue
+        # Convert enhanced format to simple format for backward compatibility
+        simple_revenues = {}
+        for year_since, data in revenues_data.items():
+            if isinstance(data, dict):
+                simple_revenues[year_since] = data.get('revenue', 0)
+            else:
+                simple_revenues[year_since] = data
         
-        usd_records = field_data['units']['USD']
-        
-        # Process each record
-        for record in usd_records:
-            # Get fiscal year
-            fy = record.get('fy')
-            if not fy:
-                continue
+        # Log extraction metadata
+        brand_name = brand_aliases[0] if brand_aliases else "Unknown"
+        if metadata['total_records_found'] > 0:
+            currencies = ", ".join(metadata['currencies_found'])
+            print(f"[XBRL] Enhanced extraction for {brand_name}: {metadata['total_records_found']} records, currencies: {currencies}")
             
-            # Only use annual data (10-K forms), skip quarterly
-            form = record.get('form', '')
-            if form not in ['10-K']:
-                continue
-            
-            # Calculate year since launch
-            try:
-                fiscal_year = int(fy)
-                year_since_launch = fiscal_year - approval_year
-                
-                # Only include Y0 through Y10 (reasonable range)
-                if 0 <= year_since_launch <= 10:
-                    revenue = record.get('val', 0)
-                    if revenue and revenue > 0:
-                        # Keep the highest revenue for each year (in case of restatements)
-                        current = revenues.get(str(year_since_launch), 0)
-                        revenues[str(year_since_launch)] = max(current, float(revenue))
-                        
-            except (ValueError, TypeError):
-                continue
+            # Log fiscal-calendar mappings if any
+            if metadata['fiscal_calendar_mappings']:
+                print(f"[XBRL] Fiscal-calendar mappings: {metadata['fiscal_calendar_mappings']}")
+        
+        revenues = simple_revenues
+    else:
+        # Old format - handle as before
+        revenues = extraction_result
     
-    return revenues
+    # Validate quality and log issues
+    brand_name = brand_aliases[0] if brand_aliases else "Unknown"
+    validation = validate_extraction_quality(revenues, brand_name)
+    
+    if validation['issues']:
+        print(f"XBRL extraction issues for {brand_name}: {validation['issues']}")
+    
+    # Remove metadata before returning
+    clean_revenues = {k: v for k, v in revenues.items() if k not in ['_source', '_enhanced_extraction']}
+    
+    return clean_revenues
 
 
 def fetch_10k_texts(cik: str, max_docs: int = 5) -> List[str]:
@@ -378,9 +359,17 @@ def _parse_amount(raw: str) -> Optional[float]:
 
 
 def extract_brand_revenue(doc_text: str, brand_aliases: List[str]) -> Dict[str, float]:
-    """Extract year->revenue near brand aliases using regex windows."""
+    """Extract year->revenue near brand aliases with XBRL filtering."""
     results: Dict[str, float] = {}
+    
+    # Core issue: Brand mentions in XBRL metadata tags, not narrative text
+    # Solution: Filter out XBRL sections before applying original logic
     text = doc_text
+    
+    # Remove inline XBRL tags that contain brand references but no financial narrative
+    text = re.sub(r'<xbrli:.*?</xbrli:[^>]*>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<xbrldi:.*?</xbrldi:[^>]*>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    
     lower = text.lower()
     for alias in brand_aliases:
         a = alias.lower()
@@ -389,21 +378,28 @@ def extract_brand_revenue(doc_text: str, brand_aliases: List[str]) -> Dict[str, 
             idx = lower.find(a, start)
             if idx == -1:
                 break
+            
+            # Original window size + XBRL filtering
             window = text[max(0, idx - 400): idx + 600]
-            # Find lines with revenue keywords
+            
+            # Skip if this window is mostly HTML/XBRL markup
+            markup_ratio = window.count('<') / max(len(window), 1)
+            if markup_ratio > 0.05:  # > 5% markup chars, likely XBRL section
+                start = idx + len(a)
+                continue
+            
+            # Original financial context check
             if re.search(r"revenue|net sales|product sales|sales|generated", window, re.IGNORECASE):
-                # Extract year-like tokens and amounts in same window
+                # Original extraction logic
                 years = re.findall(r"(20\d{2})", window)
                 amounts = [m.group(0) for m in _CURRENCY_RE.finditer(window)]
-                # Also try fallback regex for amounts without units
                 if not amounts:
                     amounts = [m.group(0) for m in _CURRENCY_NO_UNIT_RE.finditer(window)]
                 if years and amounts:
-                    # Heuristic: map most recent 3 years left-to-right
+                    # Original mapping with reasonable bounds
                     for y, amt_raw in zip(years[:3], amounts[:3]):
                         amt = _parse_amount(amt_raw)
-                        if amt:
-                            # Keep max per year across windows
+                        if amt and 1e6 <= amt <= 50e9:  # Reasonable product revenue range
                             results[y] = max(results.get(y, 0.0), amt)
             start = idx + len(a)
     return results

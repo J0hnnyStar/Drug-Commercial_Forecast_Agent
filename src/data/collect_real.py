@@ -22,6 +22,13 @@ from .sources import (
     extract_brand_revenue,
 )
 
+try:
+    from ..models.ta_priors import apply_ta_priors
+except ImportError:
+    # Fallback if ta_priors not available
+    def apply_ta_priors(drug_row, imputation_log=None):
+        return drug_row
+
 
 def load_brands(seed_csv: Path) -> List[Dict[str, str]]:
     rows: List[Dict[str, str]] = []
@@ -92,18 +99,35 @@ def build_real_dataset(seed_csv: Path,
             except Exception:
                 approval_year = None
 
-        # Extract revenues using structured XBRL data
+        # Extract revenues: First try 10-K text (product-specific), then XBRL (company totals)
         revenue_by_year: Dict[str, float] = {}
         if cik and approval_year:
-            # Fetch structured financial data from SEC XBRL API
-            xbrl_data = fetch_company_xbrl_facts(cik)
+            # Primary: Extract from 10-K text documents (product-specific mentions)
+            doc_texts = fetch_10k_texts(cik, max_docs=3)
+            for doc_text in doc_texts:
+                text_revenues = extract_brand_revenue(doc_text, [brand] + aliases)
+                # Map calendar years to years since launch
+                for cal_year_str, amt in text_revenues.items():
+                    try:
+                        cal_year = int(cal_year_str)
+                        year_since = cal_year - approval_year
+                        if 0 <= year_since <= 15:  # Expand range to capture mature drugs
+                            current = revenue_by_year.get(str(year_since), 0.0)
+                            revenue_by_year[str(year_since)] = max(current, amt)
+                    except (ValueError, TypeError):
+                        continue
             
-            # Extract revenue mapped to years since launch
-            revenue_by_year = extract_revenue_from_xbrl(
-                xbrl_data, 
-                approval_year, 
-                [brand] + aliases
-            )
+            # Fallback: If no text extraction, use XBRL (but flag as company total)
+            if not revenue_by_year:
+                xbrl_data = fetch_company_xbrl_facts(cik)
+                xbrl_revenues = extract_revenue_from_xbrl(
+                    xbrl_data, 
+                    approval_year, 
+                    [brand] + aliases
+                )
+                if xbrl_revenues:
+                    revenue_by_year = xbrl_revenues
+                    revenue_by_year['_source'] = 'xbrl_company_total'
 
         # Build launches row with comprehensive FDA data
         launches_rows.append({
@@ -111,6 +135,7 @@ def build_real_dataset(seed_csv: Path,
             "launch_id": launch_id,
             "drug_name": brand,
             "company": company,
+            "ticker": ticker,
             
             # FDA regulatory data
             "approval_date": approval_date or "",
@@ -149,26 +174,65 @@ def build_real_dataset(seed_csv: Path,
             "source_urls": json.dumps([f"FDA:{application_number}" if application_number else "FDA:Unknown"]),
         })
 
-        # Revenues: XBRL data is already mapped to year_since_launch
+        # Revenues: mapped to year_since_launch
         if revenue_by_year:
+            source_type = revenue_by_year.get('_source', '10k_text')
             for year_since_str, amt in revenue_by_year.items():
+                if year_since_str == '_source':  # Skip metadata
+                    continue
                 try:
                     year_since = int(year_since_str)
-                    # Include Y0 through Y5 (launch to maturity)
-                    if 0 <= year_since <= 5:
+                    # Include Y0 through Y10 (extended to capture available data)
+                    if 0 <= year_since <= 10:
+                        source_url = f"SEC 10-K CIK {cik}" if source_type == '10k_text' else f"SEC XBRL CIK {cik}"
                         revenues_rows.append({
                             "launch_id": launch_id,
                             "year_since_launch": year_since,
                             "revenue_usd": float(amt),
-                            "source_url": f"SEC XBRL CIK {cik}" if cik else "SEC XBRL"
+                            "source_url": source_url
                         })
                 except Exception:
                     continue
 
+    # Apply TA priors to fill missing market/pricing data
+    if launches_rows:
+        launches_df = pd.DataFrame(launches_rows)
+        print(f"Applying TA priors to {len(launches_df)} drugs...")
+        
+        imputation_logs = []
+        enhanced_launches = []
+        
+        for idx, drug_row in launches_df.iterrows():
+            imputation_log = {}
+            enhanced_drug = apply_ta_priors(drug_row, imputation_log)
+            enhanced_launches.append(enhanced_drug)
+            
+            if imputation_log:
+                imputation_log['launch_id'] = enhanced_drug['launch_id']
+                imputation_log['drug_name'] = enhanced_drug['drug_name']
+                imputation_logs.append(imputation_log)
+        
+        launches_df = pd.DataFrame(enhanced_launches)
+        
+        # Log imputation summary
+        if imputation_logs:
+            print(f"Applied TA priors to {len(imputation_logs)} drugs")
+            price_imputations = sum(1 for log in imputation_logs if log.get('price_imputed'))
+            gtn_imputations = sum(1 for log in imputation_logs if log.get('gtn_imputed'))
+            market_imputations = sum(1 for log in imputation_logs if log.get('market_size_imputed'))
+            print(f"  - Price priors: {price_imputations} drugs")
+            print(f"  - GTN priors: {gtn_imputations} drugs")
+            print(f"  - Market size priors: {market_imputations} drugs")
+
     # Write outputs
     output_dir.mkdir(exist_ok=True, parents=True)
     if launches_rows:
-        pd.DataFrame(launches_rows).to_parquet(output_dir / "launches.parquet", index=False)
+        launches_df.to_parquet(output_dir / "launches.parquet", index=False)
+        
+        # Save imputation log for audit trail
+        if imputation_logs:
+            pd.DataFrame(imputation_logs).to_parquet(output_dir / "ta_imputations.parquet", index=False)
+    
     if revenues_rows:
         pd.DataFrame(revenues_rows).to_parquet(output_dir / "launch_revenues.parquet", index=False)
 

@@ -171,7 +171,7 @@ class TestBaselineMethods:
         # Should be between 0 and 1
         for share in shares:
             assert 0 <= share <= 1
-    
+        
     def test_simple_bass_forecast(self):
         """Test Bass diffusion forecast."""
         forecast = simple_bass_forecast(self.sample_drug, years=5)

@@ -3,54 +3,54 @@
 ```mermaid
 graph TB
     %% User Interface Layer
-    User[👤 User Query<br/>"Commercial forecast for<br/>Keytruda in Oncology"]
+    User[User Query - Commercial forecast for Keytruda in Oncology]
     
     %% Main Orchestrator
-    GPT5[🎯 GPT-5 Orchestrator<br/>gpt5_orchestrator.py<br/>8-Step Pipeline Controller]
+    GPT5[GPT-5 Orchestrator - gpt5_orchestrator.py - 8-Step Pipeline Controller]
     
     %% Model Router
-    Router[🔀 Model Router<br/>model_router.py<br/>Task-Based LLM Routing]
+    Router[Model Router - model_router.py - Task-Based LLM Routing]
     
     %% Specialized Agents
     subgraph "Multi-Agent System"
-        DataAgent[📊 DataCollectionAgent<br/>DeepSeek V3.1<br/>Bulk Data Processing]
-        MarketAgent[📈 MarketAnalysisAgent<br/>GPT-5<br/>Complex Reasoning]
-        ForecastAgent[🔮 ForecastAgent<br/>Multi-Method<br/>Ensemble Forecasting]
-        ReviewAgent[🔍 ReviewAgent<br/>Perplexity Sonar<br/>Objective Critique]
+        DataAgent[DataCollectionAgent - DeepSeek V3.1 - Bulk Data Processing]
+        MarketAgent[MarketAnalysisAgent - GPT-5 - Complex Reasoning]
+        ForecastAgent[ForecastAgent - Multi-Method - Ensemble Forecasting]
+        ReviewAgent[ReviewAgent - Perplexity Sonar - Objective Critique]
     end
     
     %% Data Sources
     subgraph "Data Sources"
-        FDA[(🏛️ FDA<br/>Approvals<br/>Mechanisms)]
-        SEC[(💰 SEC EDGAR<br/>Revenue Data<br/>10-K/10-Q)]
-        Clinical[(🧪 Clinical Trials<br/>Efficacy<br/>Safety)]
-        Market[(📊 Market Intel<br/>Competition<br/>Pricing)]
+        FDA[(FDA - Approvals - Mechanisms)]
+        SEC[(SEC EDGAR - Revenue Data - 10-K/10-Q)]
+        Clinical[(Clinical Trials - Efficacy - Safety)]
+        Market[(Market Intel - Competition - Pricing)]
     end
     
     %% Forecasting Methods
     subgraph "Forecasting Methods"
-        Analog[🔄 Analog Projection<br/>35% weight<br/>Industry Standard]
-        Bass[📈 Bass Diffusion<br/>25% weight<br/>Adoption Curves]
-        Patient[👥 Patient Flow<br/>25% weight<br/>Market Sizing]
-        ML[🤖 ML Ensemble<br/>15% weight<br/>TA-Calibrated]
+        Analog[Analog Projection - 35% weight - Industry Standard]
+        Bass[Bass Diffusion - 25% weight - Adoption Curves]
+        Patient[Patient Flow - 25% weight - Market Sizing]
+        ML[ML Ensemble - 15% weight - TA-Calibrated]
     end
     
     %% System Components
     subgraph "System Infrastructure"
-        Monitor[📊 System Monitor<br/>system_monitor.py<br/>Audit Trail]
-        TAP[⚙️ TA Priors<br/>ta_priors.py<br/>Therapeutic Area<br/>Parameters]
-        Baselines[📏 Baselines<br/>baselines.py<br/>Industry Benchmarks]
+        Monitor[System Monitor - system_monitor.py - Audit Trail]
+        TAP[TA Priors - ta_priors.py - Therapeutic Area Parameters]
+        Baselines[Baselines - baselines.py - Industry Benchmarks]
     end
     
     %% Validation System
     subgraph "Validation System"
-        Historical[📋 Historical Validation<br/>phase5_real_validation.py<br/>Real LLM Calls]
-        DataAudit[🔍 Data Audit<br/>phase5_data_audit.py<br/>Quality Checks]
-        RealData[💾 Real Drug Data<br/>114 Launches<br/>Keytruda, Repatha]
+        Historical[Historical Validation - phase5_real_validation.py - Real LLM Calls]
+        DataAudit[Data Audit - phase5_data_audit.py - Quality Checks]
+        RealData[Real Drug Data - 114 Launches - Keytruda Repatha]
     end
     
     %% Output
-    Output[📊 Final Output<br/>Peak Sales Forecast<br/>Confidence Score<br/>Audit Trail]
+    Output[Final Output - Peak Sales Forecast - Confidence Score - Audit Trail]
     
     %% Flow Connections
     User --> GPT5
@@ -152,4 +152,4 @@ graph TB
 - Bootstrap confidence intervals
 - Temporal evaluation framework
 
-This architecture achieves near-consultant performance while maintaining cost efficiency and full transparency through comprehensive audit trails.
+This architecture achieves near-consultant performance while maintaining cost efficiency and full transparency through comprehensive audit trailss.

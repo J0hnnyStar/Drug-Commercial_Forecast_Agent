@@ -8,17 +8,17 @@ graph LR
     %% Control plane
     subgraph "Control"
         direction TB
-        GPT5[GPT-5 Orchestrator (gpt5_orchestrator.py)]
-        Router[Model Router (model_router.py)]
+        GPT5["GPT-5 Orchestrator<br/>gpt5_orchestrator.py"]
+        Router["Model Router<br/>model_router.py"]
     end
 
     %% Multi-Agent System
     subgraph "Multi-Agent System"
         direction TB
-        DataAgent[DataCollectionAgent (DeepSeek V3.1)]
-        MarketAgent[MarketAnalysisAgent (GPT-5)]
-        ForecastAgent[ForecastAgent (Ensemble)]
-        ReviewAgent[ReviewAgent (Perplexity Sonar)]
+        DataAgent["DataCollectionAgent<br/>DeepSeek V3.1"]
+        MarketAgent["MarketAnalysisAgent<br/>GPT-5"]
+        ForecastAgent["ForecastAgent<br/>Ensemble"]
+        ReviewAgent["ReviewAgent<br/>Perplexity Sonar"]
     end
 
     %% Data Sources
@@ -33,30 +33,30 @@ graph LR
     %% Forecasting Methods
     subgraph "Forecasting Methods"
         direction TB
-        Analog[Analogs (35%)]
-        Bass[Bass Diffusion (25%)]
-        Patient[Patient Flow (25%)]
-        ML[ML Ensemble (15%)]
+        Analog["Analogs 35%"]
+        Bass["Bass Diffusion 25%"]
+        Patient["Patient Flow 25%"]
+        ML["ML Ensemble 15%"]
     end
 
     %% System Infrastructure
     subgraph "System Infrastructure"
         direction TB
-        Monitor[System Monitor (system_monitor.py)]
-        TAP[TA Priors (ta_priors.py)]
-        Baselines[Baselines (baselines.py)]
+        Monitor["System Monitor<br/>system_monitor.py"]
+        TAP["TA Priors<br/>ta_priors.py"]
+        Baselines["Baselines<br/>baselines.py"]
     end
 
     %% Validation
     subgraph "Validation"
         direction TB
-        Historical[Historical Validation (phase5_real_validation.py)]
-        DataAudit[Data Audit (phase5_data_audit.py)]
-        RealData[Real Drug Data (114 Launches)]
+        Historical["Historical Validation<br/>phase5_real_validation.py"]
+        DataAudit["Data Audit<br/>phase5_data_audit.py"]
+        RealData["Real Drug Data 114 Launches"]
     end
 
     %% Output
-    Output[Final Output (Peak Sales, Confidence, Audit Trail)]
+    Output["Final Output<br/>Peak Sales, Confidence, Audit Trail"]
 
     %% Primary Flow
     User --> GPT5

@@ -1,106 +1,97 @@
 # Drug Commercial Forecast Agent - System Architecture
 
 ```mermaid
-graph TB
-    %% User Interface Layer
+graph LR
+    %% UI
     User[User Query - Commercial forecast for Keytruda in Oncology]
-    
-    %% Main Orchestrator
-    GPT5[GPT-5 Orchestrator - gpt5_orchestrator.py - 8-Step Pipeline Controller]
-    
-    %% Model Router
-    Router[Model Router - model_router.py - Task-Based LLM Routing]
-    
-    %% Specialized Agents
-    subgraph "Multi-Agent System"
-        DataAgent[DataCollectionAgent - DeepSeek V3.1 - Bulk Data Processing]
-        MarketAgent[MarketAnalysisAgent - GPT-5 - Complex Reasoning]
-        ForecastAgent[ForecastAgent - Multi-Method - Ensemble Forecasting]
-        ReviewAgent[ReviewAgent - Perplexity Sonar - Objective Critique]
+
+    %% Control plane
+    subgraph "Control"
+        direction TB
+        GPT5[GPT-5 Orchestrator (gpt5_orchestrator.py)]
+        Router[Model Router (model_router.py)]
     end
-    
+
+    %% Multi-Agent System
+    subgraph "Multi-Agent System"
+        direction TB
+        DataAgent[DataCollectionAgent (DeepSeek V3.1)]
+        MarketAgent[MarketAnalysisAgent (GPT-5)]
+        ForecastAgent[ForecastAgent (Ensemble)]
+        ReviewAgent[ReviewAgent (Perplexity Sonar)]
+    end
+
     %% Data Sources
     subgraph "Data Sources"
-        FDA[(FDA - Approvals - Mechanisms)]
-        SEC[(SEC EDGAR - Revenue Data - 10-K/10-Q)]
-        Clinical[(Clinical Trials - Efficacy - Safety)]
-        Market[(Market Intel - Competition - Pricing)]
+        direction TB
+        FDA[(FDA Approvals)]
+        SEC[(SEC EDGAR)]
+        Clinical[(Clinical Trials)]
+        Market[(Market Intel)]
     end
-    
+
     %% Forecasting Methods
     subgraph "Forecasting Methods"
-        Analog[Analog Projection - 35% weight - Industry Standard]
-        Bass[Bass Diffusion - 25% weight - Adoption Curves]
-        Patient[Patient Flow - 25% weight - Market Sizing]
-        ML[ML Ensemble - 15% weight - TA-Calibrated]
+        direction TB
+        Analog[Analogs (35%)]
+        Bass[Bass Diffusion (25%)]
+        Patient[Patient Flow (25%)]
+        ML[ML Ensemble (15%)]
     end
-    
-    %% System Components
+
+    %% System Infrastructure
     subgraph "System Infrastructure"
-        Monitor[System Monitor - system_monitor.py - Audit Trail]
-        TAP[TA Priors - ta_priors.py - Therapeutic Area Parameters]
-        Baselines[Baselines - baselines.py - Industry Benchmarks]
+        direction TB
+        Monitor[System Monitor (system_monitor.py)]
+        TAP[TA Priors (ta_priors.py)]
+        Baselines[Baselines (baselines.py)]
     end
-    
-    %% Validation System
-    subgraph "Validation System"
-        Historical[Historical Validation - phase5_real_validation.py - Real LLM Calls]
-        DataAudit[Data Audit - phase5_data_audit.py - Quality Checks]
-        RealData[Real Drug Data - 114 Launches - Keytruda Repatha]
+
+    %% Validation
+    subgraph "Validation"
+        direction TB
+        Historical[Historical Validation (phase5_real_validation.py)]
+        DataAudit[Data Audit (phase5_data_audit.py)]
+        RealData[Real Drug Data (114 Launches)]
     end
-    
+
     %% Output
-    Output[Final Output - Peak Sales Forecast - Confidence Score - Audit Trail]
-    
-    %% Flow Connections
+    Output[Final Output (Peak Sales, Confidence, Audit Trail)]
+
+    %% Primary Flow
     User --> GPT5
-    
-    %% Step 1: Query Parsing
-    GPT5 -->|Step 1: Parse Query| Router
-    Router -->|GPT-5| GPT5
-    
-    %% Step 2: Data Collection
-    GPT5 -->|Step 2: Orchestrate| DataAgent
-    DataAgent --> Router
-    Router -->|DeepSeek| DataAgent
+    GPT5 <--> Router
+
+    %% Router to agents (provider choice)
+    Router <--> DataAgent
+    Router <--> MarketAgent
+    Router <--> ReviewAgent
+
+    %% Data collection fan-out
     DataAgent --> FDA
     DataAgent --> SEC
     DataAgent --> Clinical
     DataAgent --> Market
-    
-    %% Step 3: Data Review
-    GPT5 -->|Step 3: Review Quality| ReviewAgent
-    ReviewAgent --> Router
-    Router -->|Perplexity| ReviewAgent
-    
-    %% Step 4: Market Analysis
-    GPT5 -->|Step 4: Analyze Market| MarketAgent
-    MarketAgent --> Router
-    Router -->|GPT-5| MarketAgent
-    
-    %% Step 5: Multi-Method Forecast
-    GPT5 -->|Step 5: Generate Forecasts| ForecastAgent
+
+    %% Forecasting
+    GPT5 --> ForecastAgent
     ForecastAgent --> Analog
     ForecastAgent --> Bass
     ForecastAgent --> Patient
     ForecastAgent --> ML
-    
-    %% Step 6: Harsh Review
-    GPT5 -->|Step 6: Critique| ReviewAgent
-    
-    %% Step 7-8: Ensemble & Validation
-    GPT5 -->|Step 7-8: Ensemble| Output
-    
-    %% System Infrastructure Connections
-    GPT5 --> Monitor
-    GPT5 --> TAP
-    ForecastAgent --> TAP
-    
-    %% Validation Connections
-    Historical --> GPT5
+
+    %% Infrastructure support (dashed)
+    GPT5 -.-> Monitor
+    GPT5 -.-> TAP
+    ForecastAgent -.-> TAP
+    ForecastAgent -.-> Baselines
+
+    %% Validation feedback (dashed back to control)
     Historical --> RealData
     DataAudit --> RealData
-    
+    RealData -.-> GPT5
+    Historical -.-> GPT5
+
     %% Styling
     classDef orchestrator fill:#ff6b6b,stroke:#333,stroke-width:3px,color:#fff
     classDef agent fill:#4ecdc4,stroke:#333,stroke-width:2px,color:#fff
@@ -109,14 +100,14 @@ graph TB
     classDef system fill:#feca57,stroke:#333,stroke-width:2px,color:#333
     classDef validation fill:#ff9ff3,stroke:#333,stroke-width:2px,color:#333
     classDef output fill:#54a0ff,stroke:#333,stroke-width:3px,color:#fff
-    
-    class GPT5 orchestrator
+
+    class GPT5,Router orchestrator
     class DataAgent,MarketAgent,ForecastAgent,ReviewAgent agent
     class FDA,SEC,Clinical,Market data
     class Analog,Bass,Patient,ML method
     class Monitor,TAP,Baselines system
     class Historical,DataAudit,RealData validation
-    class Router,Output output
+    class Output output
 ```
 
 ## Performance Metrics
